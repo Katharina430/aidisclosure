@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Disclosure — AI 활용 기록 도구</title>
+<style>
+  :root{
+    --paper:#fdfdfb;
+    --ink:#1c2733;
+    --rule:#c9cdd2;
+    --rule-strong:#5b6570;
+    --muted:#68727d;
+    --field:#f3f5f6;
+    --seal:#b3382c;
+    --accent:#26456b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:16px;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    line-height:1.6;
+    padding-bottom:6rem;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 1.25rem;}
+
+  header.masthead{
+    border-bottom:2px solid var(--ink);
+    padding:2.2rem 0 1.1rem;
+    margin-bottom:0;
+  }
+  .masthead .wrap{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:.5rem;}
+  .masthead h1{
+    font-family:Georgia,"Apple SD Gothic Neo",serif;
+    font-weight:600;font-size:1.55rem;letter-spacing:-.01em;
+  }
+  .masthead h1 small{font-size:.95rem;color:var(--muted);font-weight:400;margin-left:.6rem;}
+  .masthead .note{font-size:.85rem;color:var(--muted);}
+
+  nav.tabs{border-bottom:1px solid var(--rule);background:#fff;}
+  nav.tabs .wrap{display:flex;gap:0;}
+  nav.tabs button{
+    appearance:none;border:none;background:none;cursor:pointer;
+    font:inherit;font-size:.98rem;padding:.85rem 1.1rem;color:var(--muted);
+    border-bottom:3px solid transparent;margin-bottom:-1px;
+  }
+  nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--seal);font-weight:700;}
+  nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+
+  main{padding-top:1.8rem;}
+  .intro{font-size:.93rem;color:var(--muted);margin-bottom:1.6rem;}
+
+  fieldset{border:none;margin-bottom:2rem;}
+  legend{
+    font-weight:700;font-size:1.02rem;padding-bottom:.45rem;width:100%;
+    border-bottom:1px solid var(--rule-strong);margin-bottom:.9rem;
+  }
+  .row{display:flex;gap:.9rem;flex-wrap:wrap;margin-bottom:.8rem;}
+  .cell{flex:1 1 240px;display:flex;flex-direction:column;gap:.28rem;}
+  .cell.small{flex:0 1 170px;}
+  label{font-size:.86rem;color:var(--ink);font-weight:600;}
+  label .opt{color:var(--muted);font-weight:400;}
+  input[type=text],textarea,select{
+    font:inherit;font-size:.95rem;color:var(--ink);
+    background:var(--field);border:1px solid var(--rule);border-radius:3px;
+    padding:.5rem .6rem;width:100%;
+  }
+  textarea{min-height:4.4rem;resize:vertical;}
+  input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .hint{font-size:.8rem;color:var(--muted);}
+
+  .toolblock{
+    border:1px solid var(--rule);border-left:3px solid var(--accent);
+    border-radius:3px;padding:1rem 1rem .4rem;margin-bottom:1rem;background:#fff;
+    position:relative;
+  }
+  .toolblock h3{font-size:.92rem;margin-bottom:.7rem;color:var(--accent);}
+  .toolblock .remove{
+    position:absolute;top:.6rem;right:.6rem;appearance:none;border:1px solid var(--rule);
+    background:#fff;border-radius:3px;font:inherit;font-size:.78rem;color:var(--muted);
+    padding:.15rem .5rem;cursor:pointer;
+  }
+  .toolblock .remove:hover{color:var(--seal);border-color:var(--seal);}
+  .addbtn{
+    appearance:none;border:1px dashed var(--rule-strong);background:none;border-radius:3px;
+    font:inherit;font-size:.9rem;color:var(--accent);padding:.5rem 1rem;cursor:pointer;margin-bottom:.4rem;
+  }
+  .addbtn:hover{background:var(--field);}
+
+  .examples{border:1px dashed var(--rule-strong);border-radius:3px;padding:.6rem .8rem;margin-bottom:.9rem;background:var(--paper);font-size:.84rem;}
+  .examples summary{cursor:pointer;font-weight:600;color:var(--accent);}
+  .examples .exnote{color:var(--muted);margin:.4rem 0 .5rem;}
+  .examples ol{padding-left:1.2rem;display:flex;flex-direction:column;gap:.6rem;}
+  .examples li p{margin:0;}
+  .examples .tag{display:inline-block;font-size:.74rem;font-weight:700;color:var(--muted);margin-right:.35rem;}
+  .examples .ex{margin-top:.7rem;}
+  .examples .pills{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem;}
+  .examples .pill{appearance:none;cursor:pointer;font:inherit;font-size:.78rem;color:var(--accent);background:#fff;border:1px solid var(--accent);border-radius:999px;padding:.1rem .65rem;}
+  .examples .pill[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:700;}
+  .examples .ex p{margin:.15rem 0 0;}
+  .examples .exno{display:inline-block;font-size:.74rem;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 .55rem;line-height:1.5;}
+  .pair{font-size:.82rem;margin-top:.6rem;border-left:3px solid var(--rule);padding-left:.7rem;color:var(--ink);}
+  .pair b{font-weight:700;}
+  .checks{display:flex;flex-direction:column;gap:.45rem;margin-bottom:.4rem;}
+  .checks label{display:flex;gap:.55rem;align-items:flex-start;font-weight:400;font-size:.9rem;cursor:pointer;}
+  .checks input{margin-top:.28rem;accent-color:var(--accent);}
+
+  .radioline{display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.92rem;}
+  .radioline label{display:flex;gap:.4rem;align-items:center;font-weight:400;cursor:pointer;}
+  .radioline input{accent-color:var(--accent);}
+
+  section.preview{margin-top:2.4rem;}
+  .preview-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+    border-bottom:1px solid var(--rule-strong);padding-bottom:.5rem;margin-bottom:1rem;}
+  .preview-head h2{font-size:1.02rem;}
+  .copybtn{
+    appearance:none;border:none;cursor:pointer;font:inherit;font-weight:700;font-size:.95rem;
+    color:#fff;background:var(--seal);border-radius:3px;padding:.6rem 1.3rem;white-space:nowrap;flex-shrink:0;
+  }
+  .copybtn:hover{background:#993024;}
+  .copybtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+  .copied{font-size:.85rem;color:var(--seal);font-weight:600;display:none;}
+
+  #previewArea table{border-collapse:collapse;width:100%;font-size:.9rem;background:#fff;margin-bottom:1rem;}
+  #previewArea .tbl-title{font-weight:700;padding:.4rem 0;font-size:.95rem;}
+  #previewArea th,#previewArea td{border:1px solid var(--rule-strong);padding:.45rem .6rem;vertical-align:top;text-align:left;}
+  #previewArea th{background:var(--field);width:11rem;font-weight:600;}
+  #previewArea .srcline{font-size:.78rem;color:var(--muted);margin-top:-.4rem;margin-bottom:1rem;}
+
+  footer.colophon{margin-top:3rem;border-top:1px solid var(--rule);padding-top:1rem;font-size:.8rem;color:var(--muted);}
+  footer.colophon p{margin-bottom:.4rem;}
+  @media (max-width:560px){ #previewArea th{width:7.5rem;} }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1>AI Disclosure <small>AI 활용 기록 도구</small></h1>
+    <span class="note">작성된 내용은 서버에 저장되지 않으며, 이 화면 안에서만 유지됩니다.</span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="사용자 유형">
+  <div class="wrap">
+    <button id="tabR" aria-selected="true" onclick="switchTab('R')">연구자용</button>
+    <button id="tabS" aria-selected="false" onclick="switchTab('S')">대학생용</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- ================= 연구자용 ================= -->
+  <div id="paneR">
+    <p class="intro">연구 수행 과정에서 생성형 AI를 활용한 내역을 기록합니다. 연구를 시작할 때 활용 계획서를 먼저 작성해보면, 연구가 끝난 뒤 활용 내역을 작성할 때 수월합니다. 항목 구성은 과학기술정보통신부·한국과학기술기획평가원 「국가연구개발 AI 연구윤리 가이드」(2026. 9.)의 AI 활용 여부 공개 양식을 참조했습니다. 이 표는 참고용이며 출처 표시를 대신하지 않습니다. 출처 표시와 활용 공개의 실제 요건은 투고하는 학술지와 소속 기관의 지침을 따릅니다.</p>
+
+    <fieldset>
+      <legend>작성 시점</legend>
+      <div class="radioline">
+        <label><input type="radio" name="rMode" value="plan" onchange="modeChanged()"> 연구 시작 전 — AI 활용 계획서</label>
+        <label><input type="radio" name="rMode" value="disclose" checked onchange="modeChanged()"> 연구 종료 후 — AI 활용 공개서</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>1. 기본 정보</legend>
+      <div class="row">
+        <div class="cell"><label for="rTitle">논문명(연구과제명)</label><input type="text" id="rTitle" oninput="render()"></div>
+      </div>
+      <div class="row">
+        <div class="cell"><label for="rAuthor">저자</label><input type="text" id="rAuthor" placeholder="연구책임자를 맨 앞에 적습니다" oninput="render()"></div>
+        <div class="cell"><label for="rPeriod">연구 기간</label><input type="text" id="rPeriod" placeholder="예: 2026. 9. 1. ~ 2026. 12. 20." oninput="render()"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. 활용 도구 정보 및 내용</legend>
+      <div id="toolList"></div>
+      <button type="button" class="addbtn" onclick="addTool()">+ 활용 내역 추가</button>
+      <p class="hint">활용 내역마다 블록 하나씩 작성합니다. 한 내역에 도구를 여러 개 적어도 되고, 활용 단계가 다르면 내역을 나누는 편이 읽는 사람에게 명확합니다. 특정 분석·연구용 AI 도구는 통용되는 모델명이나 기능(목표)을 적습니다.</p>
+
+    </fieldset>
+
+    <fieldset>
+      <legend>3. 기록 관리</legend>
+      <div class="checks">
+        <label><input type="checkbox" id="rLogPdf" onchange="render()"> 대화 세션 전체를 PDF 등 개별 파일로 보관한다</label>
+        <label><input type="checkbox" id="rLogKeep" onchange="render()"> 대화 기록을 계정에 유지하고, 요청이 있을 때 원본 확인 방법을 제공한다</label>
+      </div>
+      <div class="row">
+        <div class="cell"><label for="rLogWhere">보관 위치 <span class="opt">(선택)</span></label><input type="text" id="rLogWhere" placeholder="예: 연구 자료 폴더 /AI-logs" oninput="render()"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. 최종 책임 확인</legend>
+      <div class="checks"><label><input type="checkbox" id="rPledgeOk" onchange="render()"> <span id="rPledge"></span></label></div>
+    </fieldset>
+  </div>
+
+  <!-- ================= 대학생용 ================= -->
+  <div id="paneS" hidden>
+    <p class="intro">과제·발표 등에서 AI를 활용한 경우, 교수자에게 제출할 활용 기록을 작성합니다. 표의 항목 구성은 한국대학교육협의회 「대학 AI 활용 윤리 가이드라인」(2026)의 과제 기록 서식을 참조했습니다. 이 표는 참고용이며 출처 표시를 대신하지 않습니다. 출처 표시와 활용 공개의 실제 요건은 각 수업의 강의계획서와 교수자 안내를 따릅니다.</p>
+
+    <fieldset>
+      <legend>1. 과제 기본 정보</legend>
+      <div class="row">
+        <div class="cell"><label for="sCourse">과목명</label><input type="text" id="sCourse" oninput="render()"></div>
+        <div class="cell"><label for="sTask">과제명(프로젝트명)</label><input type="text" id="sTask" oninput="render()"></div>
+      </div>
+      <div class="row">
+        <div class="cell"><label for="sId">학번</label><input type="text" id="sId" oninput="render()"></div>
+        <div class="cell"><label for="sName">성명</label><input type="text" id="sName" oninput="render()"></div>
+        <div class="cell small">
+          <label for="sUsed">AI 활용 여부</label>
+          <select id="sUsed" onchange="toggleStudentUse()">
+            <option value="일부 활용함">일부 활용함</option>
+            <option value="활용하지 않음">활용하지 않음</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset id="sUseSet">
+      <legend>2. AI 활용 내용</legend>
+      <div id="sActList"></div>
+      <button type="button" class="addbtn" onclick="addAct()">+ 활용 내용 추가</button>
+      <p class="hint">활용한 단계나 도구가 다르면 하나씩 추가하여 작성합니다.</p>
+      <div class="row" style="margin-top:1rem">
+        <div class="cell small"><label for="sShare">기여도(본인 %)</label><input type="text" id="sShare" placeholder="90" oninput="render()"></div>
+      </div>
+      <p class="hint">위에 적은 활용 내용 전체를 놓고 과제에서 본인이 한 몫을 적습니다.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. 확인</legend>
+      <div class="checks"><label><input type="checkbox" id="sPledgeOk" onchange="render()"> <span id="sPledge"></span></label></div>
+    </fieldset>
+
+  </div>
+
+  <!-- ================= 미리보기 ================= -->
+  <section class="preview">
+    <div class="preview-head">
+      <h2>미리보기 — 이 표가 복사됩니다</h2>
+      <div style="display:flex;align-items:center;gap:.8rem;">
+        <span class="copied" id="copiedMsg">복사됨 — 붙여넣을 때 ‘원본 형식 유지’(한글) 또는 ‘원본 서식 유지’(워드)를 선택하세요</span>
+        <button type="button" class="copybtn" onclick="copyTable()">표 복사</button>
+      </div>
+    </div>
+    <div id="previewArea" aria-live="polite"></div>
+  </section>
+</main>
+
+<script>
+const STAGES = ["아이디어 탐색·검증","선행연구 탐색·정리","연구 설계","자료 수집·정리","데이터 분석","번역","도표·도식 생성","윤문","교정(오탈자·표기)","코드 작성","기타(직접 입력)"];
+const EX = {"아이디어 탐색·검증": [["논문의 핵심 가설을 설명하고 예상되는 반론을 요청함.", "제시된 반론 3개 중 1개를 3장에서 직접 검토하여 논지를 보강함. AI가 제안한 문장은 본문에 옮기지 않음.", "논문의 핵심 가설을 설명하고 예상되는 반론을 요청할 예정임.", "제시된 반론은 직접 검토하여 타당한 것만 논지 보강에 반영할 예정임. AI가 제안한 문장은 본문에 옮기지 않을 예정임."], ["‘정동’이라는 개념이 문학 연구 분야에서 어떻게 쓰이는지 질문함.", "답변에서 알게 된 두 가지 용법을 2장의 문제 설정에 참고함. 개념의 정의는 원저와 선행연구에서 직접 확인하여 인용함.", "‘정동’이라는 개념이 문학 연구 분야에서 어떻게 쓰이는지 질문할 예정임.", "답변은 검토 방향을 잡는 데만 참고하고, 개념의 정의는 원저와 선행연구에서 직접 확인하여 인용할 예정임."], ["연구 중인 소설과 비교할 만한 외국 작품의 후보를 요청함.", "제시된 후보 5편 중 2편을 직접 읽고 1편을 비교 대상으로 삼음. 선정의 근거는 연구자가 판단하였고, 읽지 않은 작품은 논의에 포함하지 않음.", "연구 중인 소설과 비교할 만한 외국 작품의 후보를 요청할 예정임.", "제시된 후보는 직접 읽고 검토하여 비교 대상을 정할 예정임. 읽지 않은 작품은 논의에 포함하지 않을 예정임."]], "선행연구 탐색·정리": [["‘해방기 여성 잡지’에 관한 선행연구 후보를 요청함.", "제시된 12편 중 KCI·RISS에서 실재가 확인된 9편을 직접 읽고 6편을 인용함. 확인되지 않은 3편은 제외하였고, AI의 요약은 인용 근거로 삼지 않음.", "‘해방기 여성 잡지’에 관한 선행연구 후보를 요청할 예정임.", "제시된 문헌은 KCI·RISS에서 실재를 확인한 뒤 직접 읽고 인용할 예정임. 확인되지 않는 문헌은 제외하고, AI의 요약은 인용 근거로 삼지 않을 예정임."], ["연구자가 직접 작성한 선행연구 목록(24편)을 제시하고 빠진 논점이나 연구 경향이 있는지 점검을 요청함.", "지적된 2개 논점의 연구를 직접 찾아 확인한 뒤 1장 2절에 보완함. 선행연구의 분류와 평가는 연구자가 하였고, AI가 작성한 정리문은 본문에 쓰지 않음.", "연구자가 직접 작성한 선행연구 목록을 제시하고 빠진 논점이나 연구 경향이 있는지 점검을 요청할 예정임.", "지적된 논점은 해당 연구를 직접 찾아 확인한 뒤 보완할 예정임. 선행연구의 분류와 평가는 연구자가 하고, AI가 작성한 정리문은 본문에 쓰지 않을 예정임."], ["20쪽 분량의 논문 한 편을 요약해 달라고 요청함.", "요약은 정독할지 판단하는 데만 참고함. 인용한 내용은 원문을 직접 읽고 확인함.", "20쪽 분량의 논문 한 편을 요약해 달라고 요청할 예정임.", "요약은 정독할지 판단하는 데만 참고할 예정임. 인용하는 내용은 원문을 직접 읽고 확인할 예정임."]], "연구 설계": [["‘번역본의 곁텍스트가 독자 수용에 미친 영향’이라는 연구 질문에 적합한 분석 방법의 후보를 요청함.", "서평 분석과 판본 비교의 장단점을 견주는 데 참고하고 판본 비교를 택함. 방법의 선택과 근거는 연구자가 판단하였고, 방법론 문헌을 직접 확인함.", "‘번역본의 곁텍스트가 독자 수용에 미친 영향’이라는 연구 질문에 적합한 분석 방법의 후보를 요청할 예정임.", "제시된 방법의 장단점을 견주는 데 참고할 예정임. 방법의 선택과 근거는 연구자가 판단하고, 방법론 문헌을 직접 확인할 예정임."], ["연구자가 작성한 면담 질문 초안(12문항)에 모호하거나 중복되는 문항이 있는지 점검을 요청함.", "지적된 4문항 중 3문항을 수정함. 문항의 구성과 확정은 연구자가 하였고, AI가 새로 만든 문항은 쓰지 않음.", "연구자가 작성한 면담 질문 초안에 모호하거나 중복되는 문항이 있는지 점검을 요청할 예정임.", "지적된 문항은 연구자가 검토하여 수정할 예정임. 문항의 구성과 확정은 연구자가 하고, AI가 새로 만든 문항은 쓰지 않을 예정임."], ["연구자가 작성한 목차 초안을 제시하고 논리 전개상 빠지거나 순서가 어색한 부분을 질문함.", "3장과 4장의 순서를 바꾸는 데 참고함. 장절의 구성과 논지의 흐름은 연구자가 결정함.", "연구자가 작성한 목차 초안을 제시하고 논리 전개상 빠지거나 순서가 어색한 부분을 질문할 예정임.", "답변은 목차를 조정하는 데 참고할 예정임. 장절의 구성과 논지의 흐름은 연구자가 결정할 예정임."]], "자료 수집·정리": [["1950년대 잡지 목차 320건을 연도·필자·제목 기준의 표로 정리해 달라고 요청함.", "정리된 표를 원자료와 전부 대조하여 오류 7건을 바로잡음. 자료의 수집과 선별은 연구자가 직접 함.", "1950년대 잡지 목차를 연도·필자·제목 기준의 표로 정리해 달라고 요청할 예정임.", "정리된 표는 원자료와 전부 대조하여 오류를 바로잡을 예정임. 자료의 수집과 선별은 연구자가 직접 할 예정임."], ["옛 신문 스캔본 40면의 판독(문자 인식)을 요청함.", "판독 결과를 원본 이미지와 대조하여 교정함. 인용문은 모두 원본을 기준으로 하였고, 판독이 불확실한 글자는 AI의 추정을 따르지 않고 □로 표시함.", "옛 신문 스캔본의 판독(문자 인식)을 요청할 예정임.", "판독 결과는 원본 이미지와 대조하여 교정할 예정임. 인용문은 모두 원본을 기준으로 하고, 판독이 불확실한 글자는 AI의 추정을 따르지 않을 예정임."], ["연구자가 수집한 작가 연보 자료 3종에서 내용이 서로 어긋나는 곳을 찾아 달라고 요청함.", "지적된 9곳을 원자료에서 다시 확인하여 5곳을 주석에 밝힘. 어느 기록을 따를지는 연구자가 판단함.", "연구자가 수집한 작가 연보 자료에서 내용이 서로 어긋나는 곳을 찾아 달라고 요청할 예정임.", "지적된 곳은 원자료에서 다시 확인할 예정임. 어느 기록을 따를지는 연구자가 판단할 예정임."]], "데이터 분석": [["연구자가 구축한 신문 기사 1,200건을 연구자가 정한 5개 주제 범주에 따라 분류해 달라고 요청함.", "결과 중 120건을 표본으로 뽑아 직접 검증함(일치율 91%). 일치율이 낮은 1개 범주는 분석에서 제외하였고, 결과의 해석은 연구자가 함.", "연구자가 구축한 신문 기사 자료를 연구자가 정한 주제 범주에 따라 분류해 달라고 요청할 예정임.", "결과의 일부를 표본으로 뽑아 직접 검증하고 일치율을 밝힐 예정임. 결과의 해석은 연구자가 할 예정임."], ["설문의 개방형 응답 180건을 연구자가 만든 범주 6개로 1차 분류해 달라고 요청함. 개인을 식별할 수 있는 정보는 입력 전에 삭제함.", "전체를 다시 검토하여 23건을 재분류함. 범주 체계는 연구자가 만듦.", "설문의 개방형 응답을 연구자가 만든 범주로 1차 분류해 달라고 요청할 예정임. 개인을 식별할 수 있는 정보는 입력 전에 삭제할 예정임.", "분류 결과는 연구자가 전체를 다시 검토하여 확정할 예정임. 범주 체계는 연구자가 만들 예정임."], ["회귀분석 결과표를 연구자가 해석한 내용이 맞는지 확인을 요청함.", "지적된 1곳을 통계 문헌과 대조하여 수정함. 분석은 R로 연구자가 직접 수행하였고, AI가 계산한 수치는 쓰지 않음.", "통계 분석 결과표를 연구자가 해석한 내용이 맞는지 확인을 요청할 예정임.", "지적된 곳은 통계 문헌과 대조하여 판단할 예정임. 분석은 연구자가 직접 수행하고, AI가 계산한 수치는 쓰지 않을 예정임."]], "번역": [["독일어 철학 책 한 쪽의 초벌 번역을 요청함.", "초벌 번역은 내용을 파악하는 데만 사용함. 본문에 인용한 대목은 원문과 대조하여 연구자가 다시 번역함.", "독일어 철학 책 한 쪽의 초벌 번역을 요청할 예정임.", "초벌 번역은 내용을 파악하는 데만 사용할 예정임. 본문에 인용하는 대목은 원문과 대조하여 연구자가 다시 번역할 예정임."], ["연구자가 번역한 인용문 10곳에 오역이나 누락이 있는지 점검을 요청함.", "지적된 3곳을 원문과 다시 대조하여 2곳을 수정함. 번역어의 선택은 연구자가 판단함.", "연구자가 번역한 인용문에 오역이나 누락이 있는지 점검을 요청할 예정임.", "지적된 곳은 원문과 다시 대조하여 수정 여부를 정할 예정임. 번역어의 선택은 연구자가 판단할 예정임."], ["국문 초록의 영문 번역 초안을 요청함.", "용어와 내용을 검토하여 5개 문장을 고쳐 씀. 핵심 용어의 영문 표기는 선행연구를 따라 연구자가 정함.", "국문 초록의 영문 번역 초안을 요청할 예정임.", "초안은 용어와 내용을 검토하여 고쳐 쓸 예정임. 핵심 용어의 영문 표기는 선행연구를 따라 연구자가 정할 예정임."]], "도표·도식 생성": [["2장의 연구 절차를 보여주는 도식(그림 1)의 초안 생성을 요청함.", "내용을 검토하여 단계의 순서와 명칭을 수정한 뒤 수록함. 도식에 담긴 내용과 구조는 연구자가 정함.", "연구 절차를 보여주는 도식의 초안 생성을 요청할 예정임.", "초안은 내용을 검토하고 수정한 뒤 수록할 예정임. 도식에 담기는 내용과 구조는 연구자가 정할 예정임."], ["연구자가 정리한 연도별 작품 수(표 2)를 그래프로 그리는 코드 작성을 요청함.", "그래프의 수치를 원자료와 대조함. 자료의 수치는 AI가 생성하거나 고치지 않음.", "연구자가 정리한 수치 자료를 그래프로 그리는 코드 작성을 요청할 예정임.", "그래프의 수치는 원자료와 대조할 예정임. 자료의 수치를 AI가 생성하거나 고치게 하지 않을 예정임."], ["연구자가 작성한 작가 연보를 표 형식으로 정돈해 달라고 요청함.", "정돈된 표를 원래 연보와 대조함. 항목의 내용은 바꾸지 않았고, 추가하거나 삭제한 항목도 없음.", "연구자가 작성한 작가 연보를 표 형식으로 정돈해 달라고 요청할 예정임.", "정돈된 표는 원래 연보와 대조할 예정임. 항목의 내용을 바꾸거나 추가·삭제하게 하지 않을 예정임."]], "윤문": [["3장 2절에서 길거나 어색한 문장을 다듬는 제안을 요청함.", "제안 15곳 중 문장의 뜻과 논지를 바꾸지 않는 9곳만 반영함. 문단을 새로 쓰게 하거나 내용을 추가하게 하지 않음.", "초고에서 길거나 어색한 문장을 다듬는 제안을 요청할 예정임.", "제안 중 문장의 뜻과 논지를 바꾸지 않는 것만 반영할 예정임. 문단을 새로 쓰게 하거나 내용을 추가하게 하지 않을 예정임."], ["영문 초록의 표현과 문법을 다듬어 달라고 요청함.", "수정된 문장을 원래 뜻과 대조하여 확인하고 2곳은 원래 표현으로 되돌림. 내용의 추가나 삭제는 요청하지 않음.", "영문 초록의 표현과 문법을 다듬어 달라고 요청할 예정임.", "수정된 문장은 원래 뜻과 대조하여 확인할 예정임. 내용의 추가나 삭제는 요청하지 않을 예정임."], ["4장 1절을 2,000자 이내로 줄이기 위해 중복되는 표현을 찾아 달라고 요청함.", "지적된 곳 중 삭제할 부분을 연구자가 정하여 직접 고쳐 씀. AI가 줄여 쓴 문단을 그대로 싣지 않음.", "분량을 줄여야 하는 절에서 중복되는 표현을 찾아 달라고 요청할 예정임.", "삭제할 부분은 연구자가 정하여 직접 고쳐 쓸 예정임. AI가 줄여 쓴 문단을 그대로 싣지 않을 예정임."]], "교정(오탈자·표기)": [["원고 전체의 오탈자, 띄어쓰기, 문장부호 점검을 요청함.", "지적된 42곳을 하나씩 확인하여 37곳을 수정함. 표현이나 내용을 고치는 제안은 반영하지 않았고, 인용문의 원문 표기는 고치지 않음.", "원고 전체의 오탈자, 띄어쓰기, 문장부호 점검을 요청할 예정임.", "지적된 곳은 하나씩 확인하여 수정할 예정임. 표현이나 내용을 고치는 제안은 반영하지 않고, 인용문의 원문 표기는 고치지 않을 예정임."], ["참고문헌 목록 58건이 학술지 투고 규정의 형식에 맞는지 점검을 요청함.", "지적된 형식 오류 11건을 수정함. 저자·연도·쪽수 등 서지정보의 내용은 원문헌을 기준으로 직접 확인함.", "참고문헌 목록이 학술지 투고 규정의 형식에 맞는지 점검을 요청할 예정임.", "지적된 형식 오류는 확인하여 수정할 예정임. 서지정보의 내용은 원문헌을 기준으로 직접 확인할 예정임."], ["각주 번호와 본문의 인용 표시가 일치하는지, 용어 표기가 통일되어 있는지 점검을 요청함.", "지적된 6곳을 확인하여 수정함. 표기 통일의 기준은 연구자가 정함.", "각주 번호와 본문의 인용 표시가 일치하는지, 용어 표기가 통일되어 있는지 점검을 요청할 예정임.", "지적된 곳은 확인하여 수정할 예정임. 표기 통일의 기준은 연구자가 정할 예정임."]], "코드 작성": [["신문 기사 텍스트의 전처리(특수문자 제거, 형태소 분석)를 위한 Python 코드 작성을 요청함.", "코드를 직접 실행하고 표본 50건으로 결과를 확인함. 코드는 연구 자료와 함께 보관함.", "텍스트 자료의 전처리를 위한 Python 코드 작성을 요청할 예정임.", "코드는 직접 실행하고 표본으로 결과를 확인할 예정임. 코드는 연구 자료와 함께 보관할 예정임."], ["연구자가 작성한 R 코드의 오류 원인을 질문함.", "설명을 확인한 뒤 코드를 직접 수정함. 분석 절차와 변수의 설정은 연구자가 정함.", "연구자가 작성한 코드에 오류가 생기면 그 원인을 질문할 예정임.", "설명을 확인한 뒤 코드를 직접 수정할 예정임. 분석 절차와 변수의 설정은 연구자가 정할 예정임."], ["작품 속 지명을 지도에 표시하는 웹 페이지의 제작을 요청함.", "표시되는 지명과 좌표는 연구자가 준비하고 전부 검토함.", "작품 속 지명을 지도에 표시하는 웹 페이지의 제작을 요청할 예정임.", "표시되는 지명과 좌표는 연구자가 준비하고 전부 검토할 예정임."]], "기타(직접 입력)": [["학술대회 발표 원고를 15분 분량으로 줄이기 위해 생략할 수 있는 부분을 질문함.", "답변을 참고하여 생략할 부분을 연구자가 정함. 발표 원고는 연구자가 직접 고쳐 씀.", "학술대회 발표 원고를 정해진 분량으로 줄이기 위해 생략할 수 있는 부분을 질문할 예정임.", "답변을 참고하여 생략할 부분을 연구자가 정할 예정임. 발표 원고는 연구자가 직접 고쳐 쓸 예정임."]]};
+const SEX = [["자료 조사", "‘확증 편향’의 기본 개념을 이해하려고 질문함.", "답변 내용을 교재와 논문 2편에서 직접 확인한 뒤 그 자료를 출처로 밝힘. AI가 알려준 출처 중 확인되지 않은 1건은 쓰지 않음."], ["주제 정하기", "내가 먼저 적은 주제 후보 3개의 장단점을 물어봄.", "답변을 참고하여 최종 주제는 내가 정함."], ["개요 점검", "내가 쓴 개요를 보여주고 논리 순서가 어색한 곳을 물어봄.", "지적받은 2곳 중 1곳을 받아들여 2번과 3번의 순서를 바꿈. 개요를 대신 써 달라고 하지 않음."], ["읽기 자료 이해", "읽기 자료를 내가 먼저 읽고 쓴 요약에 빠뜨린 핵심이 있는지 물어봄.", "지적받은 1가지를 자료에서 다시 확인하여 요약에 보탬. 제출한 요약은 내가 쓴 것임."], ["초고 피드백", "서론 초고를 보여주고 근거가 부족한 곳을 지적해 달라고 함.", "지적받은 3곳 중 2곳은 자료를 더 찾아 내가 직접 고쳐 씀."], ["문장 교정", "본론 2문단의 맞춤법과 어색한 문장을 점검해 달라고 함.", "제안 6곳 중 4곳을 내가 판단해 반영함. 문단을 새로 써 달라고 하지 않음."], ["번역", "영어 자료에서 뜻이 어려운 문장 3개의 번역을 요청함.", "번역은 뜻을 이해하는 데만 참고함. 인용한 1문장은 원문과 대조해 내가 다시 옮김."], ["코드 작성", "그래프를 그리는 코드의 오류 원인을 물어봄.", "설명을 이해한 뒤 내가 고침. 12~15행은 AI가 제안한 코드를 그대로 씀."], ["발표 자료", "발표 슬라이드 3쪽에 넣을 도식의 생성을 요청함.", "생성된 도식의 내용을 확인하고 용어 2개를 고쳐 넣음. 발표 내용과 대본은 내가 작성함."]];
+function currentMode(){ return document.querySelector('input[name=rMode]:checked').value; }
+function exampleHtml(stage){
+  const list = EX[stage] || [], o = currentMode()==="plan" ? 2 : 0;
+  if(!list.length) return "";
+  return `<details class="examples" open><summary>${esc(stage.replace("(직접 입력)",""))} 단계 작성 예시</summary>
+    ${list.map((e,i)=>`<div class="ex"><span class="exno">예시 ${i+1}</span><p><span class="tag">요청 내용</span>${esc(e[o])}</p><p><span class="tag">검토·반영 내용</span>${esc(e[o+1])}</p></div>`).join("")}</details>`;
+}
+function showExamples(id){
+  const t = tools.find(t=>t.id===id), box = document.getElementById('ex-'+id);
+  if(t && box) box.innerHTML = exampleHtml(t.stage);
+}
+const SSTAGES = SEX.map(e=>e[0]).concat(["기타(직접 입력)"]);
+const SPLEDGE = { used: "제출물의 최종 내용에 대한 책임은 제출자 본인에게 있으며, AI 활용 내용을 사실대로 적었음을 확인합니다.", none: "제출물의 최종 내용에 대한 책임은 제출자 본인에게 있으며, 이 과제에 AI를 활용하지 않았음을 확인합니다." };
+let sActs = [], sSeq = 0;
+function addAct(){ sActs.push({id:++sSeq, tool:"", stage:SSTAGES[0], stageEtc:"", req:"", rev:""}); drawActs(); render(); }
+function removeAct(id){ sActs = sActs.filter(a=>a.id!==id); drawActs(); render(); }
+function updateAct(id,key,val){ const a = sActs.find(a=>a.id===id); if(a){ a[key]=val; render(); } }
+function sExampleHtml(stage){
+  const e = SEX.find(x=>x[0]===stage);
+  if(!e) return "";
+  return `<details class="examples" open><summary>${esc(stage)} 단계 작성 예시</summary>
+    <div class="ex"><p><span class="tag">요청 내용</span>${esc(e[1])}</p><p><span class="tag">검토·반영 내용</span>${esc(e[2])}</p></div></details>`;
+}
+function showSExample(id){
+  const a = sActs.find(a=>a.id===id), box = document.getElementById('sex-'+id);
+  if(a && box) box.innerHTML = sExampleHtml(a.stage);
+}
+function drawActs(){
+  const box = document.getElementById('sActList'); box.innerHTML = "";
+  sActs.forEach((a,i)=>{
+    const div = document.createElement('div'); div.className = "toolblock";
+    div.innerHTML = `
+      <h3>활용 내용 ${i+1}</h3>
+      ${sActs.length>1?`<button type="button" class="remove" onclick="removeAct(${a.id})">삭제</button>`:""}
+      <div class="row">
+        <div class="cell"><label>사용한 AI 도구 <span class="opt">(모델·버전 포함)</span></label>
+          <input type="text" value="${esc(a.tool)}" placeholder="예: Claude Sonnet 4.6" oninput="updateAct(${a.id},'tool',this.value)"></div>
+      </div>
+      <div class="row">
+        <div class="cell small"><label>활용 단계</label>
+          <select onchange="updateAct(${a.id},'stage',this.value);showSExample(${a.id})">
+            ${SSTAGES.map(s=>`<option ${s===a.stage?"selected":""}>${s}</option>`).join("")}
+          </select></div>
+        <div class="cell"><label>단계 직접 입력 <span class="opt">(‘기타’ 선택 시)</span></label>
+          <input type="text" value="${esc(a.stageEtc)}" oninput="updateAct(${a.id},'stageEtc',this.value)"></div>
+      </div>
+      <div id="sex-${a.id}">${sExampleHtml(a.stage)}</div>
+      <div class="row">
+        <div class="cell"><label>요청 내용</label>
+          <textarea placeholder="위 예시를 참고하여 AI에 무엇을 요청했는지 씁니다." oninput="updateAct(${a.id},'req',this.value)">${esc(a.req)}</textarea></div>
+      </div>
+      <div class="row">
+        <div class="cell"><label>검토·반영 내용</label>
+          <textarea placeholder="위 예시를 참고하여 결과를 어떻게 확인하고 어디에 반영했는지 씁니다." oninput="updateAct(${a.id},'rev',this.value)">${esc(a.rev)}</textarea></div>
+      </div>`;
+    box.appendChild(div);
+  });
+}
+function toggleStudentUse(){
+  const used = v('sUsed')==="일부 활용함";
+  document.getElementById('sUseSet').hidden = !used;
+  document.getElementById('sPledge').textContent = used ? SPLEDGE.used : SPLEDGE.none;
+  render();
+}
+const PLEDGE = {
+  disclose: "본 연구의 아이디어, 자료, 분석, 해석, 결론 및 최종 원고에 대한 책임은 저자(연구자)에게 있으며, 저자는 본 연구가 재현·검증 가능하도록 생성형 AI 활용 과정을 투명하고 성실하게 관리하였으며, 그 활용 내역을 사실대로 빠짐없이 적었음을 확인합니다.",
+  plan: "본 연구의 아이디어, 자료, 분석, 해석, 결론 및 최종 원고에 대한 책임은 저자(연구자)에게 있으며, 저자는 본 연구가 재현·검증 가능하도록 생성형 AI 활용 과정을 투명하고 성실하게 관리하고, 그 활용 내역을 사실대로 빠짐없이 공개할 것을 확인합니다."
+};
+function modeChanged(){
+  const mode = document.querySelector('input[name=rMode]:checked').value;
+  document.getElementById('rPledge').textContent = PLEDGE[mode];
+  tools.forEach(t=>showExamples(t.id));
+  render();
+}
+let tools = [];
+let toolSeq = 0;
+
+function addTool(){
+  tools.push({id:++toolSeq, name:"", stage:STAGES[0], stageEtc:"", period:"", detail:"", boundary:""});
+  drawTools(); render();
+}
+function removeTool(id){
+  tools = tools.filter(t=>t.id!==id);
+  drawTools(); render();
+}
+function updateTool(id, key, val){
+  const t = tools.find(t=>t.id===id);
+  if(t){ t[key]=val; render(); }
+}
+function drawTools(){
+  const box = document.getElementById('toolList');
+  box.innerHTML = "";
+  tools.forEach((t,i)=>{
+    const div = document.createElement('div');
+    div.className = "toolblock";
+    div.innerHTML = `
+      <h3>활용 내역 ${i+1}</h3>
+      ${tools.length>1?`<button type="button" class="remove" onclick="removeTool(${t.id})">삭제</button>`:""}
+      <div class="row">
+        <div class="cell"><label>도구명(모델·버전)</label>
+          <input type="text" value="${esc(t.name)}" placeholder="예: Claude(Opus 5), ChatGPT" oninput="updateTool(${t.id},'name',this.value)"></div>
+        <div class="cell small" style="flex-basis:250px"><label>활용 기간</label>
+          <input type="text" value="${esc(t.period)}" placeholder="예: 2026. 9. 1. ~ 2026. 10. 15." oninput="updateTool(${t.id},'period',this.value)"></div>
+      </div>
+      <div class="row">
+        <div class="cell small"><label>활용 단계</label>
+          <select onchange="updateTool(${t.id},'stage',this.value);showExamples(${t.id})">
+            ${STAGES.map(s=>`<option ${s===t.stage?"selected":""}>${s}</option>`).join("")}
+          </select></div>
+        <div class="cell"><label>단계 직접 입력 <span class="opt">(‘기타’ 선택 시)</span></label>
+          <input type="text" value="${esc(t.stageEtc)}" oninput="updateTool(${t.id},'stageEtc',this.value)"></div>
+      </div>
+      <div id="ex-${t.id}">${exampleHtml(t.stage)}</div>
+      <div class="row">
+        <div class="cell"><label>요청 내용</label>
+          <textarea placeholder="위 예시를 참고하여 AI에 무엇을 요청했는지 씁니다." oninput="updateTool(${t.id},'detail',this.value)">${esc(t.detail)}</textarea></div>
+      </div>
+      <div class="row">
+        <div class="cell"><label>검토·반영 내용</label>
+          <textarea placeholder="위 예시를 참고하여 결과를 어떻게 확인하고 어디에 반영했는지 씁니다." oninput="updateTool(${t.id},'boundary',this.value)">${esc(t.boundary)}</textarea></div>
+      </div>`;
+    box.appendChild(div);
+  });
+}
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+function br(s){return esc(s).replace(/\n/g,"<br>");}
+function currentPane(){return document.getElementById('paneR').hidden ? 'S' : 'R';}
+
+function switchTab(p){
+  document.getElementById('paneR').hidden = (p!=='R');
+  document.getElementById('paneS').hidden = (p!=='S');
+  document.getElementById('tabR').setAttribute('aria-selected', p==='R');
+  document.getElementById('tabS').setAttribute('aria-selected', p==='S');
+  render();
+}
+
+function buildResearcherTable(){
+  const mode = document.querySelector('input[name=rMode]:checked').value;
+  const title = mode==="plan" ? "AI 활용 계획서" : "AI 활용 공개서";
+  const rows = [];
+  rows.push(`<tr><th>논문명(연구과제명)</th><td>${esc(v('rTitle'))}</td></tr>`);
+  rows.push(`<tr><th>저자</th><td>${esc(v('rAuthor'))}</td></tr>`);
+  rows.push(`<tr><th>연구 기간</th><td>${esc(v('rPeriod'))}</td></tr>`);
+  tools.forEach((t,i)=>{
+    const stage = t.stage==="기타(직접 입력)" ? t.stageEtc : t.stage;
+    rows.push(`<tr><th>${tools.length>1 ? `활용 내역 ${i+1} — ` : ""}도구명(모델)</th><td>${esc(t.name)}</td></tr>`);
+    rows.push(`<tr><th>활용 단계</th><td>${esc(stage)}</td></tr>`);
+    rows.push(`<tr><th>활용 기간</th><td>${esc(t.period)}</td></tr>`);
+    rows.push(`<tr><th>활용 내용</th><td>${joinParts(t.detail, t.boundary)}</td></tr>`);
+  });
+  const logs = [];
+  if(document.getElementById('rLogPdf').checked) logs.push("대화 세션 전체를 PDF 등 개별 파일로 보관함");
+  if(document.getElementById('rLogKeep').checked) logs.push("대화 기록을 계정에 유지하고, 요청이 있을 때 원본 확인 방법을 제공함");
+  if(v('rLogWhere').trim()) logs.push("보관 위치: "+v('rLogWhere'));
+  if(logs.length) rows.push(`<tr><th>기록 관리</th><td>${logs.map(esc).join("<br>")}</td></tr>`);
+  if(document.getElementById('rPledgeOk').checked) rows.push(`<tr><th>최종 책임 확인</th><td>${esc(PLEDGE[mode])}</td></tr>`);
+  rows.push(`<tr><th>날짜 / 서명</th><td>날짜: 20__. __. __. &nbsp;&nbsp; 성명: __________ (서명)</td></tr>`);
+  return wrapTable(title, rows);
+}
+
+function buildStudentTable(){
+  const rows = [], used = v('sUsed')==="일부 활용함";
+  rows.push(`<tr><th>과목명</th><td>${esc(v('sCourse'))}</td></tr>`);
+  rows.push(`<tr><th>학번 / 성명</th><td>${esc([v('sId').trim(), v('sName').trim()].filter(Boolean).join(" "))}</td></tr>`);
+  rows.push(`<tr><th>과제명(프로젝트명)</th><td>${esc(v('sTask'))}</td></tr>`);
+  rows.push(`<tr><th>AI 활용 여부</th><td>${esc(v('sUsed'))}</td></tr>`);
+  if(used){
+    sActs.forEach((a,i)=>{
+      const stage = a.stage==="기타(직접 입력)" ? a.stageEtc : a.stage;
+      rows.push(`<tr><th>${sActs.length>1 ? `활용 내용 ${i+1} — ` : ""}사용한 AI 도구</th><td>${esc(a.tool)}</td></tr>`);
+      rows.push(`<tr><th>활용 단계</th><td>${esc(stage)}</td></tr>`);
+      rows.push(`<tr><th>활용 내용 기술</th><td>${joinParts(a.req, a.rev)}</td></tr>`);
+    });
+    rows.push(`<tr><th>기여도(본인 %)</th><td>${esc(v('sShare'))}</td></tr>`);
+  }
+  if(document.getElementById('sPledgeOk').checked) rows.push(`<tr><th>확인</th><td>${esc(used ? SPLEDGE.used : SPLEDGE.none)}</td></tr>`);
+  return wrapTable("AI 활용 기록 (과제 제출용)", rows);
+}
+
+function v(id){return document.getElementById(id).value;}
+function joinParts(a,b){return [a,b].map(s=>(s||"").trim()).filter(Boolean).map(br).join("<br>");}
+const TH = 'style="border:1px solid #5b6570;padding:6px 8px;background:#f3f5f6;font-weight:bold;text-align:left;vertical-align:top;width:28%"';
+const TD = 'style="border:1px solid #5b6570;padding:6px 8px;text-align:left;vertical-align:top"';
+function wrapTable(title, rows){
+  const body = rows.join("").replace(/<th>/g, `<th ${TH}>`).replace(/<td>/g, `<td ${TD}>`);
+  return `<p class="tbl-title" style="font-weight:bold;margin:0 0 6px">${title}</p><table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%">${body}</table>`;
+}
+
+function render(){
+  const area = document.getElementById('previewArea');
+  const html = currentPane()==='R' ? buildResearcherTable() : buildStudentTable();
+  area.innerHTML = html;
+}
+
+async function copyTable(){
+  const html = currentPane()==='R' ? buildResearcherTable() : buildStudentTable();
+  const tmp = document.createElement('div'); tmp.innerHTML = html.replace(/<br>/g," / ");
+  const plain = tmp.querySelector('.tbl-title').textContent + "\n" + [...tmp.querySelectorAll('tr')].map(tr=>{
+    const th = tr.querySelector('th'), td = tr.querySelector('td');
+    return (th?th.textContent:"") + "\t" + (td?td.textContent:"");
+  }).join("\n");
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([html],{type:"text/html"}),
+        "text/plain": new Blob([plain],{type:"text/plain"})
+      })]);
+    }else{
+      await navigator.clipboard.writeText(plain);
+    }
+    const m = document.getElementById('copiedMsg');
+    m.style.display="inline"; setTimeout(()=>m.style.display="none", 8000);
+  }catch(e){
+    alert("복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해 주세요.");
+  }
+}
+
+addTool();
+document.getElementById('rPledge').textContent = PLEDGE[currentMode()];
+addAct();
+document.getElementById('sPledge').textContent = SPLEDGE.used;
+render();
+</script>
+</body>
+</html>
